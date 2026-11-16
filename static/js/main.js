@@ -82,8 +82,8 @@ function videoCard(v, script, opt = {}) {
 
 /* ---------- overview: tiles + explorer ---------- */
 function overview(ds, explorer) {
-  $('#tiles').innerHTML = [[ds.n_scripts, 'structured mini-scripts'], [ds.n_shots, 'scripted shots'], ['4 / 8 / 15s', 'durations'],
-    [ds.n_models, 'systems evaluated'], [ds.n_videos.toLocaleString(), 'videos scored'], ['4 × 11', 'dimensions × sub-metrics']]
+  $('#tiles').innerHTML = [[ds.n_scripts, 'structured mini-scripts'], [ds.n_shots, 'scripted shots'], [3, 'durations: 4s, 8s, 15s'],
+    [ds.n_models, 'systems evaluated'], [ds.n_videos.toLocaleString(), 'videos scored'], [11, 'sub-metrics in 4 dimensions']]
     .map(([n, t]) => `<div class="tile"><b>${n}</b><span>${t}</span></div>`).join('');
   $('#legend').innerHTML = Object.keys(TR).map(t => `<span><i class="dot" style="background:${trColor(t)}"></i>${t}</span>`).join('') +
     '<span>Hover an <span class="ent">entity</span> tag to read its description.</span>';

@@ -40,6 +40,8 @@ code { background: var(--soft); padding: 1px 6px; border-radius: 5px; }
 .buttons.left { justify-content: flex-start; }
 .btn { background: var(--ink); color: #fff; text-decoration: none; padding: 9px 20px; border-radius: 999px; font-weight: 600; font-size: 14.5px;
   border: 1px solid var(--ink); transition: transform .15s, box-shadow .15s; }
+.btn { display: inline-flex; align-items: center; gap: 8px; }
+.ico { width: 17px; height: 17px; flex: none; }
 .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .btn.primary { background: var(--accent); border-color: var(--accent); }
 .btn[aria-disabled=true] { background: transparent; color: var(--muted); border-style: dashed; border-color: #bdb7ab; cursor: default; transform: none; box-shadow: none; }
@@ -56,7 +58,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 48px
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
-.tile b { display: block; font: 700 32px/1.1 "Space Grotesk", sans-serif; }
+.tile b { display: block; white-space: nowrap; font: 700 32px/1.1 "Space Grotesk", sans-serif; }
 .tile span { color: var(--muted); font-size: 13.5px; }
 
 /* chips, segmented controls */
