@@ -1,0 +1,46 @@
+[
+  {
+    "id": "VQ", "name": "Visual Quality",
+    "blurb": "Aesthetic appeal and technical fidelity, computed per detected shot so that transition frames do not contaminate the score.",
+    "metrics": [
+      {"id": "AS", "name": "Aesthetic Score", "example": "AS", "human_keys": ["AS"],
+       "text": "Composition, lighting and colour, rated by Q-Align on each shot and aggregated over shots."},
+      {"id": "PS", "name": "Perceptual Score", "example": "PS", "human_keys": ["PS"],
+       "text": "Technical artifacts and blur, rated by DeQA-Score on each shot and aggregated over shots."}
+    ]
+  },
+  {
+    "id": "DQ", "name": "Dynamic Quality",
+    "blurb": "Whether the video contains meaningful motion, and whether that motion is physically credible.",
+    "metrics": [
+      {"id": "DD", "name": "Dynamic Degree", "example": "DD", "human_keys": ["DD"],
+       "text": "Subject and camera dynamics from DEVIL, calibrated against human motion ratings. Measured strictly inside shot intervals, so cuts and transitions are not counted as motion."},
+      {"id": "PP", "name": "Physical Plausibility", "example": "PP", "human_keys": ["PP"],
+       "text": "A VLM judge (Qwen3.8) looks for physical anomalies: unnatural anatomical deformation, objects that vanish, implausible interactions."}
+    ]
+  },
+  {
+    "id": "SA", "name": "Semantic Alignment",
+    "blurb": "How faithfully the video realises the structured script: events, transition style, cut timing and camera language.",
+    "metrics": [
+      {"id": "VQA", "name": "VQA-Score", "example": "VQA", "human_keys": ["VQA"],
+       "text": "Binary questions probe whether scripted events occur. Each question is tied to its target shot, and full credit is given only when the event appears in the intended shot."},
+      {"id": "TC", "name": "Transition Control & Cut Timing", "example": "TC+CTA", "human_keys": ["TC", "CTA"],
+       "text": "TC checks that each requested transition occurs (TC-V) and has the requested type (TC-A): hard cut, dissolve, fade or wipe, detected by OmniShotCut and TransVLM with Qwen3.8 resolving ambiguous cases. CTA measures, in seconds, how closely the generated boundaries follow the requested timeline."},
+      {"id": "CC", "name": "Camera Control", "example": "CC", "human_keys": ["CC"],
+       "text": "For every matched shot, FilmOps operators predict shot scale, camera angle and camera movement, which are compared with the script."}
+    ]
+  },
+  {
+    "id": "CSC", "name": "Cross-Shot Consistency",
+    "blurb": "Whether entities, backgrounds and faces survive the cut. Each sub-metric is computed only on scripts annotated with the corresponding relation, and reported as a validity rate (-V) plus a conditional score (-S).",
+    "metrics": [
+      {"id": "CSEC", "name": "Entity Consistency", "example": "CSEC", "human_keys": ["CSEC"],
+       "text": "Qwen3.8 locates the recurring entities across shots and rates whether shape, proportions, colour, materials and clothing stay consistent. Changes explained by viewpoint, pose or the script are not penalised."},
+      {"id": "CSBC", "name": "Background Consistency", "example": "CSBC", "human_keys": ["CSBC"],
+       "text": "Only shots that the script assigns to the same scene are compared, for continuity of spatial layout, fixed structures and textures."},
+      {"id": "CSFC", "name": "Face Consistency", "example": "CSFC", "human_keys": ["CSFC"],
+       "text": "InsightFace detects faces in every shot, Qwen3.8 picks the target person, and identity features are compared across shots with calibrated nearest-neighbour similarity."}
+    ]
+  }
+]

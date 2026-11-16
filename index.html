@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSBench: Benchmarking Script-Controlled Multi-Shot Text-to-Video Generation</title>
+  <meta name="description" content="MSBench is a benchmark for controllable text-driven multi-shot video generation, with structured mini-scripts and a four-dimensional evaluation framework.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <a class="brand" href="#top"><span class="clap"></span>MSBench</a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a><a href="#dataset">Dataset</a><a href="#evaluation">Evaluation</a>
+      <a href="#leaderboard">Leaderboard</a><a href="#findings">Findings</a><a href="#submit">Submit</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <video class="hero-video" src="static/videos/hero.mp4" autoplay muted loop playsinline></video>
+    <div class="hero-band">
+      <h1><span class="clap big"></span>MSBench</h1>
+      <p>Benchmarking Script-Controlled Multi-Shot Text-to-Video Generation</p>
+    </div>
+  </header>
+
+  <section class="masthead">
+    <p class="authors placeholder">Author names and affiliations — to be added with the arXiv release</p>
+    <div class="buttons">
+      <a class="btn" aria-disabled="true" title="Link to be added">Paper</a>
+      <a class="btn" aria-disabled="true" title="Link to be added">Code</a>
+      <a class="btn" aria-disabled="true" title="Link to be added">Dataset</a>
+      <a class="btn" href="#leaderboard">Leaderboard</a>
+      <a class="btn primary" href="#submit">Submit a model</a>
+    </div>
+  </section>
+
+  <main>
+    <section id="overview">
+      <h2>Overview</h2>
+      <p class="lead">Text-to-video models now produce plausible short clips, but a multi-shot video needs more: shots that change <b>when</b> the script says, joined by the <b>transition</b> it asks for, filmed with the requested <b>camera language</b>, and <b>consistent</b> across cuts. MSBench measures how far this can be controlled from text. Each prompt is a structured <b>Scene–Entity–Shot mini-script</b> that fixes every shot's time span, camera state, content and outgoing transition, and each generated video is scored on four dimensions with 11 sub-metrics.</p>
+      <div class="tiles" id="tiles"></div>
+
+      <h3>One script, several systems</h3>
+      <p class="sub">Pick a script. The upper strip under each video is the timeline the script requests; the lower strip shows the transitions our detector found in the generated video. Click a strip to seek.</p>
+      <div class="chips" id="explorer-chips"></div>
+      <div class="explorer">
+        <aside class="script-card" id="explorer-script"></aside>
+        <div class="video-grid" id="explorer-videos"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section id="dataset">
+      <h2>Dataset</h2>
+      <p class="lead">300 mini-scripts at 4, 8 and 15 seconds, spanning 15 topics and two to six shots. Scripts vary along two axes: whether an entity recurs across shots, and whether the shots share one scene. Hover any chart for exact counts.</p>
+      <div class="charts">
+        <figure class="chart wide"><figcaption>Duration → script type → shot count</figcaption><div id="c-sankey" class="plot tall"></div></figure>
+        <figure class="chart"><figcaption>Topics</figcaption><div id="c-topic" class="plot tall"></div></figure>
+        <figure class="chart"><figcaption>Requested transitions</figcaption><div id="c-trans" class="plot"></div></figure>
+        <figure class="chart wide">
+          <figcaption>Camera language per shot
+            <span class="seg" id="cam-seg"><button data-k="movement" class="on">Movement</button><button data-k="scale">Scale</button><button data-k="angle">Angle</button></span>
+          </figcaption><div id="c-cam" class="plot"></div></figure>
+      </div>
+    </section>
+
+    <section id="evaluation">
+      <h2>Evaluation</h2>
+      <p class="lead">Specialist perception models are paired with VLM reasoning, and one detected shot segmentation is shared by every metric. For each sub-metric below, the same script is shown with a higher-scoring and a lower-scoring generation.</p>
+      <div class="dim-tabs" id="dim-tabs"></div>
+      <p class="sub" id="dim-blurb"></p>
+      <div class="chips" id="metric-chips"></div>
+      <div class="metric-panel" id="metric-panel"></div>
+    </section>
+
+    <section id="leaderboard">
+      <h2>Leaderboard</h2>
+      <p class="lead">14 commercial and open-weight systems, evaluated by us on the full prompt set. Scores are 0–100, higher is better; Final is the equal-weight mean of the four dimensions. Click a header to sort, tick models to compare them.</p>
+      <div class="lb-controls">
+        <span class="seg" id="lb-split"></span>
+        <span class="seg" id="lb-view"><button data-k="dims" class="on">Dimensions</button><button data-k="all">All sub-metrics</button></span>
+        <span class="chips tight" id="lb-groups"></span>
+      </div>
+      <div class="lb-wrap">
+        <div class="table-scroll"><table class="lb" id="lb-table"></table></div>
+        <figure class="chart radar"><figcaption>Compare selected models</figcaption><div id="c-radar" class="plot tall"></div></figure>
+      </div>
+      <p class="note" id="lb-note"></p>
+    </section>
+
+    <section id="findings">
+      <h2>Findings</h2>
+      <div class="findings">
+        <div>
+          <p class="lead">Visual quality is close to saturation. Multi-shot control is not: systems fall back to common patterns, cutting mainly on scene changes and rendering requested gradual transitions as hard cuts.</p>
+          <ul class="facts" id="facts"></ul>
+        </div>
+        <figure class="chart"><figcaption>Requested transition vs. what was generated (share of requests, 4s + 8s, all systems)</figcaption><div id="c-conf" class="plot tall"></div></figure>
+      </div>
+    </section>
+
+    <section id="submit">
+      <h2>Submit a model</h2>
+      <p class="lead">We run the evaluation ourselves, so every leaderboard entry is produced by the same pipeline. You send videos; we send back scores and update the leaderboard in periodic rounds.</p>
+      <ol class="steps">
+        <li><b>Generate.</b> Download the 300 scripts and generate one video per script with your model, using the provided prompt text unchanged. Name each file <code>&lt;script_id&gt;.mp4</code>.</li>
+        <li><b>Host.</b> Put the videos in a folder you control (Google Drive, Hugging Face dataset, Baidu Netdisk…) and create a share link.</li>
+        <li><b>Fill in the form.</b> Model name, organisation, contact e-mail, the share link and your generation settings (resolution, fps, sampler, seed policy).</li>
+        <li><b>We evaluate.</b> Files are checked for completeness and format, scored by the MSBench pipeline, and added in the next leaderboard round. You receive the per-video scores.</li>
+      </ol>
+      <div class="buttons left">
+        <a class="btn primary" aria-disabled="true" title="Opens with the arXiv release">Submission form (opens soon)</a>
+        <a class="btn" aria-disabled="true" title="Link to be added">Download scripts</a>
+      </div>
+      <p class="note">One entry per model version per round. Submissions are videos only; self-reported scores are not listed. Contact details are never published.</p>
+    </section>
+
+    <section id="bibtex">
+      <h2>BibTeX</h2>
+      <pre class="bib placeholder">@article{msbench,
+  title  = {MSBench: Benchmarking Script-Controlled Multi-Shot Text-to-Video Generation},
+  author = {to be added},
+  year   = {2026}
+}</pre>
+    </section>
+  </main>
+  <footer>MSBench project page · prototype</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="static/js/main.js"></script>
+</body>
+</html>
