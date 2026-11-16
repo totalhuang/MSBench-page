@@ -21,9 +21,6 @@ code { background: var(--soft); padding: 1px 6px; border-radius: 5px; }
 .nav-links { display: flex; gap: 20px; font-size: 14px; font-weight: 500; overflow-x: auto; }
 .nav-links a { text-decoration: none; opacity: .85; white-space: nowrap; }
 .nav-links a:hover { opacity: 1; }
-.clap { display: inline-block; width: 18px; height: 14px; border-radius: 3px; background: var(--accent);
-  box-shadow: 0 -5px 0 -1px currentColor; transform: translateY(2px); }
-.clap.big { width: .62em; height: .48em; border-radius: .08em; box-shadow: 0 -.17em 0 -.03em #fff; margin-right: .22em; transform: none; }
 
 /* hero */
 .hero { position: relative; height: min(62vh, 560px); min-height: 340px; background: #111; overflow: hidden; }
@@ -198,3 +195,12 @@ main.narrow h4 { font: 600 19px "Space Grotesk", sans-serif; margin: 10px 0 4px;
 .entry { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; align-items: flex-start; }
 .entry p { font-size: 14.5px; color: #3d4048; margin: 0 0 16px; flex: 1; }
 @media (max-width: 700px) { .entries { grid-template-columns: 1fr; } }
+
+/* logo + authors */
+.logo { width: 26px; height: 26px; flex: none; --logo-bg: #fff; --logo-fg: #17181c; }
+.nav.solid .logo { --logo-bg: #17181c; --logo-fg: #fff; }
+.hero-band .logo { width: .9em; height: .9em; margin-right: .2em; }
+.authors { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; max-width: 760px; margin: 0 auto 8px; color: var(--ink); font-weight: 500; font-size: 16.5px; }
+.affil { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; margin: 0 0 20px; color: var(--muted); font-size: 15px; }
+.authors sup, .affil sup { font-size: .68em; margin-left: 1px; margin-right: 1px; }
+.bib { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }

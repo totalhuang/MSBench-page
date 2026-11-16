@@ -31,4 +31,4 @@ After a new leaderboard round, rerun the paper pipeline, rerun this script, comm
 
 ## Still placeholders
 
-Authors and affiliations, Paper / Code / Dataset links, the submission form link, the script download link and the BibTeX entry.
+Paper / Code / Dataset links, the submission form link, the script download link and the BibTeX entry.
