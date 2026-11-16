@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Submit a model · MSBench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body class="subpage">
+  <nav class="nav solid">
+    <a class="brand" href="index.html"><span class="clap"></span>MSBench</a>
+    <div class="nav-links"><a href="index.html#leaderboard">Leaderboard</a><a href="index.html#evaluation">Evaluation</a><a href="index.html#dataset">Dataset</a><a href="index.html">← Back to project page</a></div>
+  </nav>
+
+  <main class="narrow">
+    <section>
+      <h2>Submit a model</h2>
+      <p class="lead">Send us the videos your model generates for the MSBench scripts. We run the full evaluation with the same pipeline as every other entry, return the per-video scores to you, and add the model to the leaderboard in the next round.</p>
+
+      <h3>1. Get the scripts</h3>
+      <p>Download <code>benchmark.json</code>. It holds 300 scripts keyed by a hash ID: 125 at 4s, 125 at 8s and 50 at 15s (field <code>duration_s</code>).</p>
+      <div class="buttons left"><a class="btn" aria-disabled="true" title="Link to be added">Download benchmark.json</a></div>
+      <p class="note">The main leaderboard uses the 4s + 8s scripts (250 videos). The 15s split is optional: submit it only if your model supports 15-second generation.</p>
+
+      <h3>2. Generate one video per script</h3>
+      <ul class="rules">
+        <li><b>Prompt.</b> Use the ready-made <code>t2v_prompt</code> string, or build your own input from the structured fields (<code>global_context</code>, <code>entities_info</code>, <code>shot_sequence</code>) if your model expects a different format, for example one prompt per shot or separate timing and camera arguments.</li>
+        <li><b>Keep the content.</b> Reformatting is fine; changing what the script asks for is not. Shot order, time spans, camera angle / scale / movement, transitions, entities and scene descriptions must all be carried over.</li>
+        <li><b>Duration.</b> Generate at the script's <code>duration_s</code>, or the closest length your model supports.</li>
+        <li><b>One sample, no selection.</b> One video per script from a single run. Do not pick the best of several samples.</li>
+        <li><b>No manual editing.</b> The video must come out of an automatic pipeline. A pipeline that generates shots separately and joins them automatically is allowed; describe it in the form.</li>
+      </ul>
+
+      <h3>3. Name and package the files</h3>
+      <ul class="rules">
+        <li>Name each file by the script's hash ID exactly as it appears in the JSON, including letter case: <code>&lt;hash&gt;.mp4</code>.</li>
+        <li>MP4 container, H.264 or H.265, at the model's native resolution and frame rate. Do not upscale, re-time or add overlays. Audio is ignored.</li>
+        <li>Put all files in one flat folder, with no sub-folders.</li>
+      </ul>
+      <pre class="tree">my_model/
+├── 015faf665ba3c4264c491f63e07e8e0f.mp4
+├── 0291226396e8190c133974cc59f9e24e.mp4
+├── …
+└── ff175a903ba6701a2d6490c276631655.mp4</pre>
+
+      <h3>4. Share the folder and fill in the form</h3>
+      <p>Upload the folder to storage you control and create a share link, then choose whichever entry is easier to reach. Both go to the same queue.</p>
+      <div class="entries">
+        <div class="entry">
+          <span class="tag">International</span>
+          <h4>Google Form</h4>
+          <p>Share the folder with Google Drive or a Hugging Face dataset repo and paste the link into the form.</p>
+          <a class="btn primary" aria-disabled="true" title="Opens with the arXiv release">Open Google Form (soon)</a>
+        </div>
+        <div class="entry">
+          <span class="tag">Mainland China · 国内入口</span>
+          <h4>国内问卷</h4>
+          <p>用百度网盘（附提取码）或其他国内网盘分享文件夹，在问卷中填写链接。Baidu Netdisk and other domestic drives are accepted.</p>
+          <a class="btn primary" aria-disabled="true" title="Opens with the arXiv release">打开国内问卷（即将开放）</a>
+        </div>
+      </div>
+      <p>The form asks for:</p>
+      <ul class="rules">
+        <li>Model name and version, organisation, and a link to the paper, code or product page.</li>
+        <li>Whether the weights are open, and how the model obtains shot structure (single prompt, per-shot prompts, an agentic pipeline…).</li>
+        <li>Generation settings: resolution, frame rate, sampler and steps, seed policy, and how you built the input from the script.</li>
+        <li>The share link (and extraction code if any), valid for at least 30 days.</li>
+        <li>A contact e-mail. It is used only to send you results and is never published.</li>
+      </ul>
+
+      <h3>5. What happens next</h3>
+      <ul class="rules">
+        <li><b>Check.</b> We verify that every expected file is present, readable and of the right duration. If something is missing we write to you before evaluating.</li>
+        <li><b>Evaluate.</b> The videos are scored on all 11 sub-metrics. Evaluation uses GPU time and a hosted VLM judge, so submissions are processed in periodic rounds.</li>
+        <li><b>Publish.</b> You receive the per-video scores first. The model is then added to the leaderboard with the settings you reported.</li>
+      </ul>
+      <p class="note">One entry per model version per round. Only videos are accepted; self-reported scores are not listed. We may decline submissions that do not follow the rules above, and we do not redistribute submitted videos without permission.</p>
+    </section>
+  </main>
+  <footer>MSBench project page · prototype</footer>
+</body>
+</html>

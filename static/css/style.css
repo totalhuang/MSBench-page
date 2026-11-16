@@ -185,3 +185,16 @@ table.lb { border-collapse: collapse; width: 100%; font-size: 14px; }
   .video-grid { grid-template-columns: 1fr; }
   h2 { font-size: 28px; }
 }
+
+/* submit page */
+.subpage { padding-top: 52px; }
+main.narrow { max-width: 860px; }
+main.narrow .lead { max-width: none; }
+main.narrow h3 { margin-top: 34px; }
+main.narrow h4 { font: 600 19px "Space Grotesk", sans-serif; margin: 10px 0 4px; }
+.rules { padding-left: 20px; margin: 8px 0 14px; display: grid; gap: 7px; }
+.tree { background: var(--ink); color: #e8e6e1; border-radius: 12px; padding: 14px 18px; overflow-x: auto; font: 13px/1.6 "JetBrains Mono", monospace; }
+.entries { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 20px; }
+.entry { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; align-items: flex-start; }
+.entry p { font-size: 14.5px; color: #3d4048; margin: 0 0 16px; flex: 1; }
+@media (max-width: 700px) { .entries { grid-template-columns: 1fr; } }

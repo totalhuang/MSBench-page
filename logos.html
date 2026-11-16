@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSBench logo options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 32px 20px 60px; background: #fbfaf8; color: #17181c; font: 15px/1.5 Inter, system-ui, sans-serif; }
+    h1 { font: 700 28px "Space Grotesk", sans-serif; text-align: center; margin: 0 0 6px; }
+    p.top { text-align: center; color: #646872; margin: 0 0 28px; }
+    .grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+    .card { background: #fff; border: 1px solid #e6e3dd; border-radius: 16px; padding: 18px; }
+    .card h2 { font: 700 18px "Space Grotesk", sans-serif; margin: 0 0 2px; }
+    .card p { margin: 0 0 14px; color: #646872; font-size: 13.5px; min-height: 40px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sw { border-radius: 12px; display: flex; align-items: center; justify-content: center; height: 150px; }
+    .light { background: #f2efe9; color: #17181c; } .dark { background: #15161a; color: #fff; }
+    .lock { display: flex; align-items: center; gap: 9px; font: 700 20px "Space Grotesk", sans-serif; height: 54px; padding: 0 14px; border-radius: 10px; margin-top: 10px; }
+    .lock small { margin-left: auto; font: 500 11.5px Inter, sans-serif; opacity: .6; display: flex; align-items: center; gap: 6px; }
+  </style>
+</head>
+<body>
+  <h1>MSBench logo options</h1>
+  <p class="top">Each option is shown large on light and dark, as the navigation lockup, and at favicon size (16 px).</p>
+  <div class="grid" id="grid"></div>
+  <script>
+    // fg = main colour, bg = colour behind the mark, ac = accent
+    const AC = '#e2572b';
+    const LOGOS = [
+      ['A · Clapperboard', 'A clapperboard whose slate holds a three-shot timeline. The most literal reading of "scripted shots".',
+        (fg, bg) => `<g transform="rotate(-9 9 23)"><rect x="8" y="11" width="48" height="11" rx="3" fill="${AC}"/>
+          <path d="M16 11h7l-5 11h-7zM30 11h7l-5 11h-7zM44 11h7l-5 11h-7z" fill="${bg}"/></g>
+          <rect x="8" y="25" width="48" height="31" rx="6" fill="${fg}"/>
+          <rect x="14" y="36" width="10" height="9" rx="2" fill="${bg}"/><rect x="27" y="36" width="15" height="9" rx="2" fill="${AC}"/><rect x="45" y="36" width="5" height="9" rx="2" fill="${bg}"/>`],
+      ['B · Shot timeline', 'Three shots of different lengths on a timeline, with a playhead on the cut. Emphasises timing control.',
+        (fg, bg) => `<rect x="4" y="4" width="56" height="56" rx="14" fill="${fg}"/>
+          <rect x="11" y="27" width="13" height="14" rx="3" fill="${bg}"/><rect x="27" y="27" width="17" height="14" rx="3" fill="${AC}"/><rect x="47" y="27" width="6" height="14" rx="3" fill="${bg}"/>
+          <path d="M25.5 18v29" stroke="${bg}" stroke-width="2.4" stroke-linecap="round"/><path d="M21 14h9l-4.5 6z" fill="${bg}"/>`],
+      ['C · Stacked frames', 'Three frames fanned out behind a play button: several shots, one video.',
+        (fg, bg) => `<rect x="20" y="8" width="38" height="28" rx="6" fill="${fg}" opacity=".28"/>
+          <rect x="13" y="17" width="38" height="28" rx="6" fill="${fg}" opacity=".55"/>
+          <rect x="6" y="26" width="38" height="28" rx="6" fill="${AC}"/><path d="M21 33.5v13l11-6.5z" fill="${bg}"/>`],
+      ['D · Cut M', 'The letter M sliced by a diagonal cut into two shots. Works as a monogram and reads well when tiny.',
+        (fg, bg, id) => `<defs><clipPath id="l${id}"><path d="M0 0h37L25 64H0z"/></clipPath><clipPath id="r${id}"><path d="M42 0h22v64H30z"/></clipPath></defs>
+          <path clip-path="url(#l${id})" fill="${fg}" d="M7 54V10h12l13 23 13-23h12v44H46V29L35.5 48h-7L18 29v25z"/>
+          <path clip-path="url(#r${id})" fill="${AC}" transform="translate(1.5 -3)" d="M7 54V10h12l13 23 13-23h12v44H46V29L35.5 48h-7L18 29v25z"/>`],
+      ['E · Viewfinder', 'Viewfinder corners framing three shots, with a control slider underneath: framing plus control.',
+        (fg, bg) => `<path d="M6 18V10a4 4 0 0 1 4-4h8M46 6h8a4 4 0 0 1 4 4v8M58 34v6a4 4 0 0 1-4 4h-8M18 44h-8a4 4 0 0 1-4-4v-6" fill="none" stroke="${fg}" stroke-width="4.5" stroke-linecap="round"/>
+          <rect x="14" y="15" width="10" height="20" rx="3" fill="${fg}"/><rect x="27" y="15" width="14" height="20" rx="3" fill="${AC}"/><rect x="44" y="15" width="6" height="20" rx="3" fill="${fg}"/>
+          <path d="M8 55h48" stroke="${fg}" stroke-width="4" stroke-linecap="round" opacity=".35"/><circle cx="34" cy="55" r="6" fill="${AC}" stroke="${bg}" stroke-width="2.5"/>`],
+      ['F · Film strip cut', 'A strip of film with sprocket holes, cut into three shots by two slanted transitions.',
+        (fg, bg) => `<path d="M4 16h17l-5 32H4z" fill="${fg}"/><path d="M25 16h20l-5 32H20z" fill="${AC}"/><path d="M49 16h11v32H44z" fill="${fg}"/>
+          <g fill="${bg}"><rect x="7" y="20" width="5" height="4" rx="1"/><rect x="7" y="40" width="5" height="4" rx="1"/><rect x="29" y="20" width="5" height="4" rx="1"/><rect x="26" y="40" width="5" height="4" rx="1"/><rect x="52" y="20" width="5" height="4" rx="1"/><rect x="50" y="40" width="5" height="4" rx="1"/></g>`],
+    ];
+    const svg = (fn, size, fg, bg, id) => `<svg width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${fn(fg, bg, id)}</svg>`;
+    let n = 0;
+    document.getElementById('grid').innerHTML = LOGOS.map(([name, text, fn]) => {
+      const L = ['#17181c', '#f2efe9'], D = ['#ffffff', '#15161a'];
+      return `<div class="card"><h2>${name}</h2><p>${text}</p>
+        <div class="row"><div class="sw light">${svg(fn, 104, ...L, n++)}</div><div class="sw dark">${svg(fn, 104, ...D, n++)}</div></div>
+        <div class="lock light">${svg(fn, 26, ...L, n++)}MSBench<small>favicon ${svg(fn, 16, ...L, n++)}</small></div>
+        <div class="lock dark">${svg(fn, 26, ...D, n++)}MSBench<small>favicon ${svg(fn, 16, ...D, n++)}</small></div></div>`;
+    }).join('');
+  </script>
+</body>
+</html>
