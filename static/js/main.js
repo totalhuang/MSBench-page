@@ -119,19 +119,193 @@ function datasetCharts(ds) {
   $('#cam-seg').onclick = e => { const k = e.target.dataset.k; if (!k) return;
     [...$('#cam-seg').children].forEach(b => b.classList.toggle('on', b === e.target)); cam.setOption(bar(st[k], css('--accent')), true); };
 
-  const cf = ds.transition_confusion, cells = [];
-  cf.rows.forEach((r, i) => r.pct.forEach((p, j) => cells.push([j, i, p])));
-  chart('#c-conf', { grid: { left: 8, right: 10, top: 34, bottom: 6, containLabel: true }, tooltip: { formatter: p => `requested <b>${cf.requested[p.value[1]]}</b> → ${cf.generated[p.value[0]]}: <b>${p.value[2]}%</b>` },
-    xAxis: { type: 'category', position: 'top', data: cf.generated.map(g => g === 'none' ? 'none' : g), axisTick: { show: false }, axisLine: { show: false }, axisLabel: { ...FONT, fontSize: 12.5, interval: 0 } },
-    yAxis: { type: 'category', inverse: true, data: cf.requested, axisTick: { show: false }, axisLine: { show: false }, axisLabel: { ...FONT, fontSize: 12.5 } },
-    visualMap: { show: false, min: 0, max: 65, inRange: { color: ['#fbf3ee', '#f3b79f', '#e2572b'] } },
-    series: [{ type: 'heatmap', data: cells, itemStyle: { borderColor: '#fff', borderWidth: 3, borderRadius: 6 }, label: { show: true, formatter: p => p.value[2].toFixed(0) + '%', ...FONT, fontSize: 13, fontWeight: 600 } }] });
-  const acc = Object.fromEntries(cf.requested.map((k, i) => [k, cf.rows[i]]));
-  $('#facts').innerHTML = [[`${acc['hard cut'].acc}%`, 'of requested hard cuts are generated as hard cuts.'],
-    [`${Math.min(acc.dissolve.acc, acc.fade.acc, acc.wipe.acc)}–${Math.max(acc.dissolve.acc, acc.fade.acc, acc.wipe.acc)}%`, 'of requested dissolves, fades and wipes come out with the right type.'],
-    [`${acc.wipe.pct[0]}%`, 'of requested wipes are rendered as a hard cut instead.'],
-    [`${ds.human_srcc}%`, 'system-level Spearman correlation between the MSBench Final score and human pairwise preference.']]
-    .map(([n, t]) => `<li><b>${n}</b>${t}</li>`).join('');
+}
+
+/* ---------- findings: the five findings of the paper (Sec. 5.3), one slide each ---------- */
+const GC = { 'Conventional T2V': '#d1495b', 'Native Multi-shot T2V': '#00798c', 'Multi-shot Specialist': '#5c4d7d' };
+const AX = { axisTick: { show: false }, axisLine: { show: false } };
+const VAL = { splitLine: { lineStyle: { color: '#efece6' } }, axisLabel: { ...FONT, fontSize: 11 } };
+const NAMEAX = { nameLocation: 'middle', nameTextStyle: { ...FONT, fontSize: 12, color: '#646872' } };
+const segHTML = items => `<span class="seg">${items.map(([k, t], i) => `<button data-k="${k}" class="${i ? '' : 'on'}">${t}</button>`).join('')}</span>`;
+
+function findings(ds) {
+  const f = ds.findings, by = (rows, id) => rows.find(r => r.id === id);
+  const c1 = f.c1, c2 = f.c2, sig = c1.filter(r => r.sig);
+  const k26 = by(c2, 'kling'), k30 = by(c2, 'kling3.0'), msm = by(c2, 'msm');
+  const c4 = f.c4, conv = c4['Conventional T2V'], nat = c4['Native Multi-shot T2V'], spec = c4['Multi-shot Specialist'];
+  const st15 = conv['15s'].map(r => r.single_take);
+  const bg = f.c5.background, veo = by(bg, 'veo'), bgm = by(bg, 'msm');
+  const cam = asp => Object.fromEntries(f.c3[asp].map(r => [r.state, r]));
+  const ang = cam('angle'), mov = cam('movement');
+  const pct = v => `${v.toFixed(1)}<small>%</small>`;
+
+  const slides = [
+    { tab: 'Cuts follow scene changes', title: 'Systems with weaker multi-shot control tend to cut at scene changes.',
+      claim: `With duration, shot count and transition type held fixed, ${sig.length} of 14 systems render ${Math.min(...sig.map(r => r.gap)).toFixed(0)}–${Math.max(...sig.map(r => r.gap)).toFixed(0)} points fewer requested cuts when consecutive shots stay in one location. The gap is largest for the four conventional T2V models; Kling 3.0, Seedance 2.0 and the multi-shot specialists show no significant gap. Rewriting single-scene scripts so that the second shot moves to a new location adds shot boundaries far more often than it removes them.`,
+      stats: [[`${sig.length}<small> / 14</small>`, 'systems cut significantly less within a single scene'],
+        [`${c1[0].gap.toFixed(1)}<small> pts</small>`, `largest gap (${c1[0].name}: ${c1[0].single.toFixed(0)}% vs ${c1[0].multi.toFixed(0)}%)`],
+        ['32<small> vs 3</small>', 'boundaries added vs removed by a new location (24 scripts, 3 systems)']],
+      implies: 'Future models need to decouple camera switches from changes of environment, e.g. by training on multi-angle coverage within shared scenes.',
+      caption: 'Requested cuts rendered, single- vs. multi-scene scripts (4s + 8s)', draw: drawCut,
+      note: 'Hollow: single-scene scripts · filled: multi-scene. Faded systems: gap not significant (95% CI includes 0).' },
+    { tab: 'Structure ≠ transitions', title: 'Accurate shot structure does not imply accurate transitions.',
+      claim: `Requested gradual transitions are most often rendered as hard cuts: a requested dissolve becomes a hard cut in ${f.dissolve_to_cut}% of cases and a dissolve in only ${f.dissolve_acc}%. The substitution does not shrink as shot structure improves: MSM and Kling 3.0 produce the requested shot count in ${msm.count_exact.toFixed(0)}% and ${k30.count_exact.toFixed(0)}% of videos, yet render more than 90% of requested gradual transitions as hard cuts.`,
+      stats: [[pct(f.dissolve_to_cut), 'of requested dissolves come out as hard cuts'],
+        [`+${(k30.count_exact - k26.count_exact).toFixed(0)}<small> pts</small>`, 'shot-count accuracy, Kling 2.6 → 3.0'],
+        [`${k26.parts[0].toFixed(1)} → ${k30.parts[0].toFixed(1)}<small>%</small>`, 'gradual transitions with the requested type, Kling 2.6 → 3.0']],
+      implies: 'Learning where shots change does not teach a model how they should change. Transition type needs its own conditioning and supervision, e.g. training clips with labelled transitions.',
+      caption: 'Requested vs. rendered transitions', seg: [['sys', 'Per system'], ['conf', 'Confusion matrix']], draw: drawTrans,
+      note: 'Per system: 4s + 8s, systems sorted by shot-count accuracy (right). Confusion matrix: all durations and systems, share of requests.' },
+    { tab: 'Camera: common states only', title: 'Camera control is reliable mainly for common camera states.',
+      claim: `Camera Control is low even for systems that render almost every requested shot, so the errors arise within the shots. On shots that are rendered, eye-level reaches ${ang['eye-level'].score.toFixed(1)} and a static camera ${mov.static.score.toFixed(1)}, whereas a tilted angle reaches ${ang.tilted.score.toFixed(1)} and a tracking shot ${mov.tracking.score.toFixed(1)}. When the request is missed, the detected state is most often a static camera, a wider framing or an eye-level view.`,
+      stats: [[`${ang['eye-level'].score.toFixed(1)}`, 'eye-level angle, the most common request'], [`${ang.tilted.score.toFixed(1)}`, 'tilted angle, the hardest angle'],
+        [`${mov.static.requested.toFixed(0)} → ${mov.static.detected.toFixed(0)}<small>%</small>`, 'share of rendered shots that are static: requested → detected']],
+      implies: 'Stronger per-shot camera control may require rebalancing this long tail, e.g. targeted data and camera annotations for rare viewpoints, scales and movements.',
+      caption: 'Camera Control by requested state (rendered shots, all systems)', seg: [['angle', 'Angle'], ['scale', 'Scale'], ['movement', 'Movement']], draw: drawCam,
+      note: 'Movement: tilt and handheld have no direct FilmOps class and earn at most partial credit, so they are greyed out and not used for conclusions.' },
+    { tab: 'More shots, less structure', title: 'Shot structure degrades on longer scripts with more shots.',
+      claim: `For conventional T2V models, the share of videos with the requested shot count falls from ${conv.base[0].exact.toFixed(1)}% for two shots to ${conv.base.at(-1).exact.toFixed(1)}% for four, and on the 15s extension ${Math.min(...st15).toFixed(0)}–${Math.max(...st15).toFixed(0)}% of their videos are a single take. Native multi-shot T2V models hold up better but still decline from ${nat.base[0].exact.toFixed(1)}% to ${nat.base.at(-1).exact.toFixed(1)}%, increasingly by adding shots, while the specialists stay near 90%. Aesthetic Score is flat across all of these conditions.`,
+      stats: [[`${conv.base[0].exact.toFixed(0)} → ${conv.base.at(-1).exact.toFixed(0)}<small>%</small>`, 'conventional T2V, correct shot count, 2 → 4 shots'],
+        [`${nat.base[0].exact.toFixed(0)} → ${nat.base.at(-1).exact.toFixed(0)}<small>%</small>`, 'native multi-shot T2V, 2 → 4 shots'],
+        [`${Math.min(...st15).toFixed(0)}–${Math.max(...st15).toFixed(0)}<small>%</small>`, 'single-take videos from the two open conventional models at 15s']],
+      implies: 'Complex multi-shot capability has to be acquired through dedicated training; shot-level inputs that make the temporal layout explicit may help more than one long prompt.',
+      caption: 'Videos with the requested shot count, by number of requested shots', draw: drawCount,
+      note: `On the 15s extension the conventional group contains only Wan2.2 and HunyuanVideo 1.5. Specialists: ${spec.base.map(r => r.exact.toFixed(0)).join(' / ')}% at 2 / 3 / 4 shots.` },
+    { tab: 'One score hides two failures', title: 'A combined score can mask opposite failure modes.',
+      claim: `Multiplying validity by the score on valid videos, Veo 3.1 and MSM obtain ${veo.VS} and ${bgm.VS} on background consistency. Yet Veo 3.1 produces comparable shots in ${veo.V}% of scripts and keeps the background well (${veo.S}), whereas MSM produces them in ${bgm.V}% but preserves the background less (${bgm.S}). The two call for different remedies: realising the requested shots first, or carrying identity and background across them.`,
+      stats: [[`${veo.VS} <small>vs</small> ${bgm.VS}`, 'combined background score, Veo 3.1 vs MSM'], [`${veo.V} <small>vs</small> ${bgm.V}`, 'validity (% scripts with comparable shots)'],
+        [`${veo.S} <small>vs</small> ${bgm.S}`, 'score on valid videos']],
+      implies: 'Multi-shot benchmarks should report validity and the score on valid videos separately, as the -V / -S columns of the leaderboard do.',
+      caption: 'Validity vs. score on valid videos (4s + 8s)', seg: [['background', 'Background'], ['entity', 'Entity'], ['face', 'Face'], ['tc', 'Transition']], draw: drawValid,
+      note: 'Grey curves connect equal products (validity × score). Points on the same curve tie on a combined score.' },
+  ];
+
+  const track = $('#fx-track'), tabs = $('#fx-tabs');
+  slides.forEach((sl, i) => {
+    const t = el('button', 'fx-tab', `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${sl.tab}</span>`);
+    Object.assign(t, { role: 'tab', type: 'button' }); t.onclick = () => go(i); tabs.append(t);
+    const s = el('article', 'fx-slide', `<div><div class="fx-kicker">Finding ${i + 1}</div><h3>${sl.title}</h3><p class="fx-claim">${sl.claim}</p>` +
+      `<div class="fx-stats">${sl.stats.map(([n, t]) => `<div class="fx-stat"><b>${n}</b><span>${t}</span></div>`).join('')}</div>` +
+      `<div class="fx-implies"><b>Implication.</b> ${sl.implies}</div></div>` +
+      `<figure class="fx-fig"><figcaption><span>${sl.caption}</span>${sl.seg ? segHTML(sl.seg) : ''}</figcaption><div class="plot"></div><p class="fnote">${sl.note}</p></figure>`);
+    s.setAttribute('aria-label', `Finding ${i + 1} of ${slides.length}`);
+    track.append(s);
+    const c = echarts.init(s.querySelector('.plot'), null, { renderer: 'svg' }); charts.push(c);
+    sl.draw(c, sl.seg ? sl.seg[0][0] : null);
+    const sg = s.querySelector('.seg');
+    if (sg) sg.onclick = e => { const k = e.target.dataset.k; if (!k) return; [...sg.children].forEach(b => b.classList.toggle('on', b === e.target)); sl.draw(c, k); };
+  });
+  $('#fx-groups').innerHTML = Object.entries(GC).map(([g, c]) => `<span><i style="background:${c}"></i>${g}</span>`).join('');
+
+  let cur = -1;
+  const step = () => track.children.length > 1 ? track.children[1].offsetLeft - track.children[0].offsetLeft : track.clientWidth;
+  const mark = i => {
+    if (i === cur) return; cur = i;
+    [...tabs.children].forEach((t, j) => { t.classList.toggle('on', i === j); t.setAttribute('aria-selected', i === j); });
+    const t = tabs.children[i]; tabs.scrollTo({ left: t.offsetLeft - tabs.offsetLeft - 8, behavior: 'smooth' });
+    $('#fx-prev').disabled = i === 0; $('#fx-next').disabled = i === slides.length - 1;
+    $('#fx-count').textContent = `${i + 1} / ${slides.length}`;
+  };
+  let lock = null, unlock;  // while a tab/arrow scroll animates, ignore the intermediate positions
+  const go = i => { i = Math.max(0, Math.min(slides.length - 1, i)); lock = i; clearTimeout(unlock);
+    const x = i * step(); track.scrollTo({ left: x }); mark(i);
+    unlock = setTimeout(() => {  // smooth scrolling can be skipped or throttled (background tabs); land on the slide anyway
+      if (Math.abs(track.scrollLeft - x) > 2) { track.style.scrollBehavior = 'auto'; track.scrollLeft = x; track.style.scrollBehavior = ''; }
+      lock = null; }, 900); };
+  track.addEventListener('scroll', () => { const i = Math.round(track.scrollLeft / step());
+    if (lock !== null) { if (i === lock && Math.abs(track.scrollLeft - i * step()) < 2) lock = null; return; } mark(i); }, { passive: true });
+  $('#fx-prev').onclick = () => go(cur - 1); $('#fx-next').onclick = () => go(cur + 1);
+  $('#fx').addEventListener('keydown', e => {
+    if (e.target.closest('.seg')) return;
+    if (e.key === 'ArrowRight') { go(cur + 1); e.preventDefault(); } else if (e.key === 'ArrowLeft') { go(cur - 1); e.preventDefault(); }
+  });
+  addEventListener('resize', () => { track.style.scrollBehavior = 'auto'; track.scrollLeft = cur * step(); track.style.scrollBehavior = ''; });
+  mark(0);
+
+  function drawCut(c) {
+    const ink = r => r.sig ? 1 : .4;
+    c.setOption({
+      grid: { left: 8, right: 14, top: 8, bottom: 34, containLabel: true },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,0,0,.03)' } },
+        formatter: ps => { const r = c1[ps[0].dataIndex]; return `<b>${r.name}</b><br>single-scene ${r.single}%<br>multi-scene ${r.multi}%<br>gap ${r.gap} pts${r.sig ? '' : ' (n.s.)'}`; } },
+      xAxis: { type: 'value', min: 0, max: 100, name: 'Requested cuts rendered (%)', nameGap: 24, ...NAMEAX, ...VAL },
+      yAxis: { type: 'category', inverse: true, data: c1.map(r => r.name), ...AX,
+        axisLabel: { ...FONT, fontSize: 12, formatter: (v, i) => c1[i].sig ? v : `{m|${v}}`, rich: { m: { color: '#a3a6ad', fontSize: 12 } } } },
+      series: [
+        { type: 'custom', silent: true, z: 1, encode: { x: [0, 1], y: 2 }, data: c1.map((r, i) => ({ value: [r.single, r.multi, i], itemStyle: { color: GC[r.group], opacity: ink(r) } })),
+          renderItem: (p, api) => { const a = api.coord([api.value(0), api.value(2)]), b = api.coord([api.value(1), api.value(2)]);
+            return { type: 'line', shape: { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, style: { stroke: api.visual('color'), lineWidth: 4, opacity: .28 * api.visual('opacity') } }; } },
+        { name: 'single-scene', type: 'scatter', symbolSize: 11, z: 2, data: c1.map((r, i) => ({ value: [r.single, i], itemStyle: { color: '#fff', borderColor: GC[r.group], borderWidth: 2.2, opacity: ink(r) } })) },
+        { name: 'multi-scene', type: 'scatter', symbolSize: 11, z: 3, data: c1.map((r, i) => ({ value: [r.multi, i], itemStyle: { color: GC[r.group], opacity: ink(r) } })) }] }, true);
+  }
+
+  function drawTrans(c, k) {
+    if (k === 'conf') {
+      const cf = ds.transition_confusion, cells = [];
+      cf.rows.forEach((r, i) => r.pct.forEach((p, j) => cells.push([j, i, p])));
+      c.setOption({ grid: { left: 8, right: 10, top: 30, bottom: 8, containLabel: true },
+        tooltip: { formatter: p => `requested <b>${cf.requested[p.value[1]]}</b> → ${cf.generated[p.value[0]]}: <b>${p.value[2]}%</b> of ${cf.rows[p.value[1]].n}` },
+        xAxis: { type: 'category', position: 'top', data: cf.generated, ...AX, axisLabel: { ...FONT, fontSize: 12.5, interval: 0 } },
+        yAxis: { type: 'category', inverse: true, data: cf.requested, ...AX, axisLabel: { ...FONT, fontSize: 12.5 } },
+        visualMap: { show: false, min: 0, max: 65, inRange: { color: ['#fbf3ee', '#f3b79f', '#e2572b'] } },
+        series: [{ type: 'heatmap', data: cells, itemStyle: { borderColor: '#fff', borderWidth: 3, borderRadius: 6 },
+          label: { show: true, formatter: p => p.value[2].toFixed(0) + '%', ...FONT, fontSize: 13, fontWeight: 600 } }] }, true);
+      return;
+    }
+    const parts = ['requested type', 'hard cut', 'other gradual', 'no transition'], pc = ['#0f9d7a', '#17181c', '#a9dccd', '#e4e0d8'];
+    c.setOption({ legend: { top: 0, left: 0, itemWidth: 12, itemHeight: 10, itemGap: 12, textStyle: { ...FONT, fontSize: 12 } },
+      grid: { left: 8, right: 8, top: 32, bottom: 28, containLabel: true },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,0,0,.03)' } },
+        formatter: ps => `<b>${c2[ps[0].dataIndex].name}</b> · shot count ✓ ${c2[ps[0].dataIndex].count_exact}%<br>` + ps.map(p => `${p.marker}${p.seriesName}: ${p.value}%`).join('<br>') },
+      xAxis: { type: 'value', max: 100, name: 'Requested gradual transitions (%)', nameGap: 22, ...NAMEAX, ...VAL },
+      yAxis: [{ type: 'category', inverse: true, data: c2.map(r => r.name), ...AX, axisLabel: { ...FONT, fontSize: 12 } },
+        { type: 'category', inverse: true, position: 'right', data: c2.map(r => `${r.count_exact.toFixed(0)}%`), ...AX,
+          name: 'shots ✓', nameLocation: 'start', nameGap: 6, nameTextStyle: { ...FONT, fontSize: 11, color: '#646872' },
+          axisLabel: { ...FONT, fontSize: 11.5, color: '#646872', fontFamily: 'JetBrains Mono, monospace' } }],
+      series: parts.map((p, k) => ({ name: p, type: 'bar', stack: 't', barWidth: '64%', data: c2.map(r => r.parts[k]),
+        itemStyle: { color: pc[k], borderRadius: k === 3 ? [0, 4, 4, 0] : 0 } })) }, true);
+  }
+
+  function drawCam(c, asp) {
+    const rows = f.c3[asp], weak = s => s === 'tilt' || s === 'handheld';
+    c.setOption({ grid: { left: 8, right: 40, top: 8, bottom: 28, containLabel: true },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,0,0,.03)' } },
+        formatter: ps => { const r = rows[ps[0].dataIndex]; return `<b>${r.state}</b> · ${r.n} shots<br>Camera Control ${r.score}<br>requested ${r.requested ?? '–'}% · detected ${r.detected ?? '–'}% of rendered shots`; } },
+      xAxis: { type: 'value', max: 100, name: 'Camera Control on rendered shots', nameGap: 22, ...NAMEAX, ...VAL },
+      yAxis: { type: 'category', inverse: true, data: rows.map(r => r.state), ...AX, axisLabel: { ...FONT, fontSize: 12.5 } },
+      series: [{ type: 'bar', barWidth: '58%', data: rows.map(r => ({ value: r.score,
+        itemStyle: { color: weak(r.state) ? '#d8d4cb' : `rgba(15,157,122,${(.3 + .7 * r.score / 80).toFixed(2)})`, borderRadius: [0, 5, 5, 0] } })),
+        label: { show: true, position: 'right', ...FONT, fontSize: 11.5, fontWeight: 600, formatter: p => p.value.toFixed(1) } }] }, true);
+  }
+
+  function drawCount(c) {
+    const G = Object.keys(GC), tiers = [['base', 0, ['2', '3', '4']], ['15s', 1, ['4', '5', '6']]];
+    c.setOption({ legend: { top: 0, left: 0, itemWidth: 16, itemHeight: 8, textStyle: { ...FONT, fontSize: 12 }, data: G },
+      tooltip: { trigger: 'item', formatter: p => { const r = p.data.r; return `<b>${p.seriesName}</b> · ${p.data.tier}, ${r.shots} shots (${r.n} videos)<br>exact ${r.exact}% · fewer ${r.fewer}% · more ${r.more}%<br>single take ${r.single_take}%`; } },
+      grid: [{ left: 50, right: '50%', top: 42, bottom: 44 }, { left: '56%', right: 12, top: 42, bottom: 44 }],
+      xAxis: tiers.map(([t, i, d]) => ({ gridIndex: i, type: 'category', data: d, boundaryGap: false, name: i ? '15s · requested shots' : '4s / 8s · requested shots', nameGap: 26,
+        ...NAMEAX, axisTick: { show: false }, axisLine: { lineStyle: { color: '#d9d5cc' } }, axisLabel: { ...FONT, fontSize: 12 } })),
+      yAxis: tiers.map(([, i]) => ({ gridIndex: i, type: 'value', min: 0, max: 100, ...VAL, axisLabel: { ...FONT, fontSize: 11, show: !i, formatter: '{value}%' },
+        name: i ? '' : 'Correct shot count', nameGap: 38, ...NAMEAX })),
+      series: G.flatMap(g => tiers.map(([t, i]) => ({ name: g, type: 'line', xAxisIndex: i, yAxisIndex: i, symbol: 'circle', symbolSize: 8,
+        lineStyle: { width: 2.5, type: i ? [6, 4] : 'solid' }, itemStyle: { color: GC[g] },
+        data: (c4[g][t] || []).map(r => ({ value: r.exact, r, tier: t === 'base' ? '4s / 8s' : '15s' })) }))) }, true);
+  }
+
+  function drawValid(c, metric) {
+    const pts = f.c5[metric], lo = Math.max(0, Math.floor(Math.min(...pts.map(p => p.S)) / 10) * 10 - 5), hi = 100;
+    const hl = metric === 'background' ? ['veo', 'msm'] : [];
+    const iso = [20, 40, 60, 80].map(v => ({ type: 'line', silent: true, symbol: 'none', z: 0, lineStyle: { color: '#dcd8d0', width: 1 },
+      data: Array.from({ length: 60 }, (_, i) => { const x = v + (100 - v) * i / 59; return [x, 100 * v / x]; }).filter(([, y]) => y >= lo && y <= hi),
+      endLabel: { show: true, formatter: `${v}`, ...FONT, fontSize: 10.5, color: '#a3a6ad' } }));
+    c.setOption({ grid: { left: 8, right: 26, top: 14, bottom: 34, containLabel: true },
+      tooltip: { trigger: 'item', formatter: p => p.data && p.data.p ? `<b>${p.data.p.name}</b><br>validity ${p.data.p.V}% · score ${p.data.p.S}<br>product ${p.data.p.VS}` : '' },
+      xAxis: { type: 'value', min: 0, max: 100, name: 'Validity (% of scripts that can be scored)', nameGap: 24, ...NAMEAX, ...VAL },
+      yAxis: { type: 'value', min: lo, max: hi, name: 'Score on valid videos', nameGap: 34, ...NAMEAX, ...VAL },
+      series: [...iso, { type: 'scatter', z: 3, data: pts.map(p => ({ value: [p.V, p.S], p, symbolSize: hl.includes(p.id) ? 16 : 11,
+        itemStyle: { color: GC[p.group], borderColor: hl.includes(p.id) ? '#17181c' : '#fff', borderWidth: hl.includes(p.id) ? 2 : 1, opacity: hl.length && !hl.includes(p.id) ? .55 : .95 },
+        label: { show: hl.includes(p.id), formatter: p.name, position: p.id === 'msm' ? 'left' : 'top', ...FONT, fontSize: 12.5, fontWeight: 600 } })) }] }, true);
+  }
 }
 
 /* ---------- evaluation ---------- */
@@ -219,5 +393,5 @@ function leaderboard(lb) {
 }
 
 /* ---------- boot ---------- */
-Promise.all(['dataset', 'explorer', 'metrics', 'leaderboard'].map(n => fetch(`data/${n}.json`).then(r => r.json())))
-  .then(([ds, ex, mt, lb]) => { overview(ds, ex); datasetCharts(ds); evaluation(mt); leaderboard(lb); });
+Promise.all(['dataset', 'explorer', 'metrics', 'leaderboard'].map(n => fetch(`data/${n}.json`, { cache: 'no-cache' }).then(r => r.json())))
+  .then(([ds, ex, mt, lb]) => { $('#lb-srcc').textContent = (ds.human_srcc / 100).toFixed(2); overview(ds, ex); datasetCharts(ds); findings(ds); evaluation(mt); leaderboard(lb); });

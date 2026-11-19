@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="static/img/logo.svg">
-  <link rel="stylesheet" href="static/css/style.css">
+  <link rel="stylesheet" href="static/css/style.css?v=20261119">
 </head>
 <body>
   <nav class="nav" id="nav">
@@ -58,7 +58,7 @@
 
     <section id="leaderboard">
       <h2>Leaderboard</h2>
-      <p class="lead">14 commercial and open-weight systems, evaluated by us on the full prompt set. Scores are 0–100, higher is better; Final is the equal-weight mean of the four dimensions. Click a header to sort, tick models to compare them. The four dimensions are explained under <a href="#evaluation">Evaluation</a>.</p>
+      <p class="lead">14 commercial and open-weight systems, all evaluated by us on the 250-script base set (4s + 8s); the nine that natively generate 15-second video are also scored on the 50-script 15s extension. Scores are 0–100, higher is better; Final is the equal-weight mean of the four dimensions, and its system ranking reaches a Spearman correlation of <b id="lb-srcc"></b> with human pairwise preference. Click a header to sort, tick models to compare them. The four dimensions are explained under <a href="#evaluation">Evaluation</a>.</p>
       <div class="lb-controls">
         <span class="seg" id="lb-split"></span>
         <span class="seg" id="lb-view"><button data-k="dims" class="on">Dimensions</button><button data-k="all">All sub-metrics</button></span>
@@ -73,12 +73,15 @@
 
     <section id="findings">
       <h2>Findings</h2>
-      <div class="findings">
-        <div>
-          <p class="lead">Visual quality is close to saturation. Multi-shot control is not: systems fall back to common patterns, cutting mainly on scene changes and rendering requested gradual transitions as hard cuts.</p>
-          <ul class="facts" id="facts"></ul>
+      <p class="lead">Visual quality does little to separate the 14 systems: on the same script, two systems differ by 7.9 points in Aesthetic Score but by 23.0 in Semantic Alignment. What separates them is how they execute the script. The paper reports five findings; browse them below.</p>
+      <div class="fx" id="fx">
+        <div class="fx-tabs" id="fx-tabs" role="tablist" aria-label="Findings"></div>
+        <div class="fx-stage">
+          <button class="fx-arrow prev" id="fx-prev" aria-label="Previous finding"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="fx-track" id="fx-track"></div>
+          <button class="fx-arrow next" id="fx-next" aria-label="Next finding"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
-        <figure class="chart"><figcaption>Requested transition vs. what was generated (share of requests, 4s + 8s, all systems)</figcaption><div id="c-conf" class="plot tall"></div></figure>
+        <div class="fx-foot"><span class="fx-groups" id="fx-groups"></span><span class="fx-count" id="fx-count"></span></div>
       </div>
     </section>
 
@@ -132,6 +135,6 @@
   <footer>MSBench project page · prototype</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-  <script src="static/js/main.js"></script>
+  <script src="static/js/main.js?v=20261119"></script>
 </body>
 </html>

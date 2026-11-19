@@ -109,6 +109,53 @@ dataset['transition_confusion'] = conf
 ML = json.loads((DEV / 'paper_final_20261113/out/model_level.json').read_text())
 dataset['human_srcc'] = r1(100 * ML['final_vs_pairwise_bt']['vs_auto_base']['srcc'])
 
+# ---- the five findings of the paper (Sec. 5.3); same sources as fig_findings (findings.json) and the camera-state table
+F = json.loads((DEV / 'paper_findings_20261114/out/findings.json').read_text())
+GROUP_OF = {m: g for g, ms in GROUPS for m, _ in ms}
+c1 = [{'id': m, 'name': NAME[m], 'group': GROUP_OF[m], 'single': r1(o['single']), 'multi': r1(o['multi']),
+       'gap': r1(-o['adj_diff']), 'sig': o['adj_diff_ci'][1] < 0} for m, o in F['c1'].items()]
+c1.sort(key=lambda r: -r['gap'])
+c2 = []
+for m, o in ((m, o) for m, o in F['c2'].items() if m in NAME):
+    req, mat = o['n_gradual_requested'], o['n_gradual_matched']
+    corr, hard, none = o['gradual_acc'], o['substitution'] * mat / req, 100 * (req - mat) / req
+    c2.append({'id': m, 'name': NAME[m], 'group': GROUP_OF[m], 'count_exact': r1(o['count_exact']),
+               'parts': [r1(corr), r1(hard), r1(max(0.0, 100 - corr - hard - none)), r1(none)]})
+c2.sort(key=lambda r: -r['count_exact'])
+CAM = {'angle': ['eye-level', 'high-angle', 'low-angle', "bird's-eye-view", 'tilted'],
+       'scale': ['extreme-close-up', 'close-up', 'medium-close-up', 'medium', 'medium-long', 'full', 'long'],
+       'movement': ['static', 'pan', 'tilt', 'zoom', 'dolly', 'tracking', 'handheld']}
+c3 = {}
+for asp, states in CAM.items():
+    rows = []
+    for s in states:
+        c = A['camera_state'][f'all|camera_{asp}|{s}']
+        rows.append({'state': s, 'n': c['n'], 'score': r1(c['score_exist']), 'requested': r1(F['c3'][asp]['requested_share'].get(s)),
+                     'detected': r1(F['c3'][asp]['predicted_share'].get(s))})
+    c3[asp] = sorted(rows, key=lambda r: -r['score'])
+c4 = {}
+for k, o in F['c4'].items():
+    g, tier, n = k.split('|')
+    if g == 'model':  # per-system rows; the page shows the group curves of fig_findings (c)
+        continue
+    g = {'Native multi-shot T2V': 'Native Multi-shot T2V', 'Multi-shot specialists': 'Multi-shot Specialist'}.get(g, g)
+    c4.setdefault(g, {}).setdefault(tier, []).append({'shots': int(n), 'n': o['n'], 'exact': r1(o['exact']), 'fewer': r1(o['fewer']),
+                                                     'more': r1(o['more']), 'single_take': r1(o['single_take'])})
+c5 = {}
+for k, o in F['c5']['points'].items():
+    metric, m = k.split('|')
+    c5.setdefault(metric, []).append({'id': m, 'name': NAME[m], 'group': GROUP_OF[m], 'V': r1(o['V']), 'S': r1(o['S']), 'VS': r1(o['VS'])})
+tr_all = {k: A['transition'][f'all|{k}'] for k in kinds}
+dataset['findings'] = {'c1': c1, 'c2': c2, 'c3': c3, 'c4': c4, 'c5': c5,
+                       'dissolve_to_cut': r1(100 * tr_all['dissolve'].get('hard cut', 0) / tr_all['dissolve']['n']),
+                       'dissolve_acc': r1(tr_all['dissolve']['acc'])}
+# confusion pooled over all durations, as in the appendix table and the 45.9% quoted in Finding 2
+conf = {'requested': kinds, 'generated': kinds + ['none'], 'rows': []}
+for k in kinds:
+    d = tr_all[k]
+    conf['rows'].append({'n': d['n'], 'acc': r1(d['acc']), 'pct': [r1(100 * d.get(g, 0) / d['n']) for g in conf['generated']]})
+dataset['transition_confusion'] = conf
+
 # ---- metrics and their high / low examples (appendix metric visualisation picks)
 human = {}
 for line in (PAPER / 'tables/gen/human_main_body.tex').read_text().splitlines():

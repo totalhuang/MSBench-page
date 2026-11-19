@@ -36,9 +36,9 @@
     "blurb": "Whether entities, backgrounds and faces survive the cut. Each sub-metric is computed only on scripts annotated with the corresponding relation, and reported as a validity rate (-V) plus a conditional score (-S).",
     "metrics": [
       {"id": "CSEC", "name": "Entity Consistency", "example": "CSEC", "human_keys": ["CSEC"],
-       "text": "Qwen3.8 locates the recurring entities across shots and rates whether shape, proportions, colour, materials and clothing stay consistent. Changes explained by viewpoint, pose or the script are not penalised."},
+       "text": "Qwen3.8 locates the recurring entities across shots and rates on a 1–5 scale whether shape, proportions, colour, materials and clothing stay consistent. Changes explained by viewpoint, pose or the script are not penalised."},
       {"id": "CSBC", "name": "Background Consistency", "example": "CSBC", "human_keys": ["CSBC"],
-       "text": "Only shots that the script assigns to the same scene are compared, for continuity of spatial layout, fixed structures and textures."},
+       "text": "Qwen3.8 compares only shots that the script assigns to the same scene and rates the continuity of spatial layout, fixed structures and textures, without penalising differences in viewpoint or lighting."},
       {"id": "CSFC", "name": "Face Consistency", "example": "CSFC", "human_keys": ["CSFC"],
        "text": "InsightFace detects faces in every shot, Qwen3.8 picks the target person, and identity features are compared across shots with calibrated nearest-neighbour similarity."}
     ]
