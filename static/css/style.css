@@ -251,3 +251,9 @@ main.narrow h4 { font: 600 19px "Space Grotesk", sans-serif; margin: 10px 0 4px;
 .affil { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; margin: 0 0 20px; color: var(--muted); font-size: 15px; }
 .authors sup, .affil sup { font-size: .68em; margin-left: 1px; margin-right: 1px; }
 .bib { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+
+/* news */
+#news { padding-top: 36px; }
+.news { max-width: 900px; margin: 0 auto; padding-left: 20px; font-size: 16px; }
+.news li { margin: 6px 0; }
+.news b { margin-right: 8px; }

@@ -81,6 +81,35 @@ for g, ms in GROUPS:
                 row.setdefault('ci', {})[sp] = [r1(ci['lo']), r1(ci['hi'])]
         board['models'].append(row)
 
+# ---- systems evaluated after the paper, with the released pipeline (python -m msbench aggregate -> summary.json).
+# Same units as analyze.py: 1-5 judge scores (entity_S, background_S) -> (S - 1) / 4; CC-V = share of scripted shots
+# with an order-matched detected shot that has a FilmOps movement label. No bootstrap CI.
+n_extra_videos = 0
+EXTRA = [('magi2', 'MAGI-2', 'Native Multi-shot T2V', False, DEV / 'magi2_eval_20261126/results')]
+for m, name, g, is_open, res in EXTRA:
+    summ = json.loads((res / 'summary.json').read_text())
+    film = {x['key']: x for x in map(json.loads, (res / 'shot_metrics/filmops.jsonl').read_text().splitlines())}
+    fin = [json.loads(l) for l in (res / 'final_scores.jsonl').read_text().splitlines()]
+    def cc_v(rs):
+        v = []
+        for r in rs:
+            if r.get('camera_control') is None:
+                continue
+            seq, shots = B[r['key']]['shot_sequence'], film[r['key']]['shots']
+            v.append(sum(1 for i in range(len(seq)) if i < len(shots) and 'status' not in shots[i]) / len(seq))
+        return sum(v) / len(v)
+    tier = {'base': (4, 8), '4s': (4,), '8s': (8,), '15s': (15,)}
+    row = {'id': m, 'name': name, 'group': g, 'open': is_open, 'scores': {}}
+    for sp in splits:
+        d = dict(summ['base (4s+8s)' if sp == 'base' else sp])
+        for k in ('entity_S', 'background_S'):
+            d[k] = (d[k] - 1) / 4
+        d['cc_V'] = cc_v([r for r in fin if r['duration_s'] in tier[sp]])
+        row['scores'][sp] = {c: r1(None if d.get(k) is None else 100 * d[k]) for c, k in COLS}
+    board['models'].append(row)
+    NAME[m] = name
+    n_extra_videos += len(fin)
+
 # ---- dataset statistics
 C = collections.Counter
 stats = {k: C() for k in ('duration', 'type', 'topic', 'shots', 'transition', 'angle', 'scale', 'movement')}
@@ -95,7 +124,7 @@ for b in B.values():
         for a in ('angle', 'scale', 'movement'):
             stats[a][s['camera'][a]] += 1
 dataset = {'n_scripts': len(B), 'n_shots': sum(b['shots_num'] for b in B.values()),
-           'n_videos': len(SCORES), 'n_models': len(NAME),
+           'n_videos': len(SCORES) + n_extra_videos, 'n_models': len(NAME),
            'stats': {k: sorted(v.items(), key=lambda kv: -kv[1]) for k, v in stats.items()},
            'sankey': [{'source': a, 'target': b, 'value': v} for (a, b), v in links.items()]}
 

@@ -375,8 +375,8 @@ function leaderboard(lb) {
     }).join('');
     $('#lb-table').innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
     $('.lb-wrap').classList.toggle('all', state.view === 'all');
-    $('#lb-note').textContent = (state.split === '15s' ? 'The 15s split has 50 scripts and covers the nine systems that support 15-second generation. ' : '') +
-      'Brackets under Final are 95% bootstrap confidence intervals. -V columns are validity rates; the paired column is the score on valid videos.';
+    $('#lb-note').textContent = (state.split === '15s' ? 'The 15s split has 50 scripts and covers the ten systems that support 15-second generation. ' : '') +
+      'Brackets under Final are 95% bootstrap confidence intervals (not computed for MAGI-2, added after the paper). -V columns are validity rates; the paired column is the score on valid videos.';
     drawRadar(rows); radar.resize();
   };
   const seg = (id, items, key) => { const box = $(id);

@@ -41,6 +41,14 @@
   </section>
 
   <main>
+    <section id="news">
+      <h2>News</h2>
+      <ul class="news">
+        <li><b>2026.11</b> We evaluate MAGI-2 (Sand.ai): it tops the <a href="#leaderboard">leaderboard</a> with a base-set Final of 82.1 (81.2 on 15s), leading on Dynamic Quality and Semantic Alignment.</li>
+        <li><b>2026.11</b> We release the <a href="https://arxiv.org/abs/2611.29417" target="_blank" rel="noopener">paper</a>, the <a href="https://github.com/totalhuang/MSBench" target="_blank" rel="noopener">evaluation code</a> and the 300 benchmark prompts.</li>
+      </ul>
+    </section>
+
     <section id="overview">
       <h2>Overview</h2>
       <p class="lead">Text-to-video models now produce plausible short clips, but a multi-shot video needs more: shots that change <b>when</b> the script says, joined by the <b>transition</b> it asks for, filmed with the requested <b>camera language</b>, and <b>consistent</b> across cuts. MSBench measures how far this can be controlled from text. Each prompt is a structured <b>Scene–Entity–Shot mini-script</b> that fixes every shot's time span, camera state, content and outgoing transition, and each generated video is scored on four dimensions with 11 sub-metrics.</p>
@@ -58,7 +66,7 @@
 
     <section id="leaderboard">
       <h2>Leaderboard</h2>
-      <p class="lead">14 commercial and open-weight systems, all evaluated by us on the 250-script base set (4s + 8s); the nine that natively generate 15-second video are also scored on the 50-script 15s extension. Scores are 0–100, higher is better; Final is the equal-weight mean of the four dimensions, and its system ranking reaches a Spearman correlation of <b id="lb-srcc"></b> with human pairwise preference. Click a header to sort, tick models to compare them. The four dimensions are explained under <a href="#evaluation">Evaluation</a>.</p>
+      <p class="lead">15 commercial and open-weight systems, all evaluated by us on the 250-script base set (4s + 8s); the ten that natively generate 15-second video are also scored on the 50-script 15s extension. Scores are 0–100, higher is better; Final is the equal-weight mean of the four dimensions, and its system ranking reaches a Spearman correlation of <b id="lb-srcc"></b> with human pairwise preference. Click a header to sort, tick models to compare them. The four dimensions are explained under <a href="#evaluation">Evaluation</a>.</p>
       <div class="lb-controls">
         <span class="seg" id="lb-split"></span>
         <span class="seg" id="lb-view"><button data-k="dims" class="on">Dimensions</button><button data-k="all">All sub-metrics</button></span>
